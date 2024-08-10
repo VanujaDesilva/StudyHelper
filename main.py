@@ -29,6 +29,7 @@ process_url_click = st.sidebar.button("Process URLs")
 file_path = "faiss_store_openai.pkl"
 
 main_placefolder = st.empty()
+llm = OpenAI(temperature=0.9, max_tokens=500)
 
 if process_url_click:
     # loading articles' data
@@ -49,6 +50,23 @@ if process_url_click:
     main_placefolder.text("Embedding Vector Started Building...✅✅✅")
     time.sleep(2)
     # Save the FAISS index to a pickle file
-    with open(file_path,"wb") as f:
+    with open(file_path, "wb") as f:
         pickle.dump(vectorstore_openai, f)
 
+query = main_placefolder.text_input("Question: ")
+if query:
+    if os.path.exists(file_path):
+        vectorestore = pickle.load(f)
+        chain = RetrievalQAWithSourcesChain.from_llm(llm=llm, retriever=vectorestore.as_retriever())
+        result = chain({"question": query}, return_only_outputs=True)
+        # {"answer": "", "sources":[] }
+        st.header("Answer")
+        st.write(result["answer"])
+
+        #Display sources, if available
+        sources = result.get("sources", "")
+        if sources:
+            st.subheader("Sources:")
+            sources_list = sources.split("\n") # Split the sources
+            for source in sources_list:
+                st.write(source)
