@@ -1,18 +1,18 @@
-# import necessary libraries
 import os
 import streamlit as st
 import pickle
 import time
-from langchain import OpenAI
+from langchain import OpenAI, HuggingFaceHub
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import UnstructuredURLLoader
-from langchain.embeddings import OpenAIEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 
 from dotenv import load_dotenv
 
-load_dotenv()  # take enviroment varialbel
+load_dotenv()
+  # take enviroment varialbel
 
 # UI
 st.title("📚 StudyHelper 🤖")
@@ -26,7 +26,7 @@ for i in range(3):  # because we are getting only 3 URLs at a time
 
 process_url_click = st.sidebar.button("Process URLs")
 
-file_path = "faiss_store_openai.pkl"
+file_path = "faiss_store_huggingface.pkl"
 
 main_placefolder = st.empty()
 llm = OpenAI(temperature=0.9, max_tokens=500)
@@ -42,16 +42,17 @@ if process_url_click:
         chunk_size=1000
     )
     main_placefolder.text("Text Splitter... Started...✅✅✅")
+
     # gathering all the data chunks
     docs = text_splitter.split_documents(data)
     # create embeddings
-    embeddings = OpenAIEmbeddings()
-    vectorstore_openai = FAISS.from_documents(docs, embeddings)
+    embeddings = HuggingFaceEmbeddings()
+    vectorstore_huggingface = FAISS.from_documents(docs, embeddings)
     main_placefolder.text("Embedding Vector Started Building...✅✅✅")
     time.sleep(2)
     # Save the FAISS index to a pickle file
-    with open(file_path, "wb") as f:
-        pickle.dump(vectorstore_openai, f)
+    with open(file_path,"wb") as f:
+        pickle.dump(vectorstore_huggingface, f)
 
 query = main_placefolder.text_input("Question: ")
 if query:
@@ -67,6 +68,7 @@ if query:
         sources = result.get("sources", "")
         if sources:
             st.subheader("Sources:")
-            sources_list = sources.split("\n") # Split the sources
+            sources_list = sources.split("\n") # Split the sources   
+
             for source in sources_list:
                 st.write(source)
